@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# Node / React / Expo
+node_modules/
+dist/
+build/
+.expo/
+.expo-shared/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Docker
+*.log
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Uploaded/local files (not production storage)
+storage/
+media/
