@@ -1,65 +1,15 @@
 """Testes de comunicados: público-alvo, agendamento, confirmação de leitura e permissões."""
 import uuid
 from datetime import datetime, timedelta, timezone
-from types import SimpleNamespace
 
 from app.models.announcement import AnnouncementClassroom, AnnouncementRead
 from app.models.classroom import Enrollment
+from tests.conftest import build_school_scenario as _setup
 from tests.conftest import create_school, register_and_login
 
 
 def _auth(token: str) -> dict:
     return {"Authorization": "Bearer " + token}
-
-
-def _setup(client) -> SimpleNamespace:
-    """Escola com turmas 5A e 5B, um professor e um responsável por turma.
-
-    Há também um responsável sem aluno vinculado e um usuário com papel de aluno.
-    """
-    admin = register_and_login(client, "admin@conecta.com", "admin_tecnico")
-    school = create_school(client, admin)
-    school_id = school["id"]
-
-    def user(email: str, role: str) -> str:
-        return register_and_login(client, email, role, school_id=school_id)
-
-    s = SimpleNamespace(
-        school_id=school_id,
-        admin=admin,
-        direcao=user("direcao@escola.com", "direcao"),
-        secretaria=user("secretaria@escola.com", "secretaria"),
-        coordenacao=user("coord@escola.com", "coordenacao_pedagogica"),
-        prof_a=user("prof-a@escola.com", "professor"),
-        prof_b=user("prof-b@escola.com", "professor"),
-        resp_a=user("resp-a@escola.com", "responsavel"),
-        resp_b=user("resp-b@escola.com", "responsavel"),
-        resp_livre=user("resp-livre@escola.com", "responsavel"),
-        aluno=user("aluno@escola.com", "aluno"),
-    )
-
-    def user_id(token: str) -> str:
-        return client.get("/api/v1/auth/me", headers=_auth(token)).json()["id"]
-
-    def post(path: str, payload: dict) -> dict:
-        response = client.post(path, json=payload, headers=_auth(s.secretaria))
-        assert response.status_code == 201, response.text
-        return response.json()
-
-    s.class_a = post("/api/v1/classrooms", {"name": "5A", "segment": "Fundamental", "school_year": 2026})["id"]
-    s.class_b = post("/api/v1/classrooms", {"name": "5B", "segment": "Fundamental", "school_year": 2026})["id"]
-    student_a = post("/api/v1/students", {"full_name": "Aluno A"})["id"]
-    student_b = post("/api/v1/students", {"full_name": "Aluno B"})["id"]
-
-    post(f"/api/v1/classrooms/{s.class_a}/enrollments", {"student_id": student_a})
-    post(f"/api/v1/classrooms/{s.class_b}/enrollments", {"student_id": student_b})
-    s.resp_a_id = user_id(s.resp_a)
-    s.resp_b_id = user_id(s.resp_b)
-    post(f"/api/v1/students/{student_a}/guardians", {"guardian_id": s.resp_a_id, "relationship_label": "mae"})
-    post(f"/api/v1/students/{student_b}/guardians", {"guardian_id": s.resp_b_id, "relationship_label": "pai"})
-    post(f"/api/v1/classrooms/{s.class_a}/teachers", {"teacher_id": user_id(s.prof_a)})
-    post(f"/api/v1/classrooms/{s.class_b}/teachers", {"teacher_id": user_id(s.prof_b)})
-    return s
 
 
 def _publish(client, token: str, **overrides):

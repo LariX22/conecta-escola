@@ -19,6 +19,7 @@ Papéis: `admin_tecnico`, `direcao`, `secretaria`, `coordenacao_pedagogica`, `pr
 | Editar/apagar comunicado | ❌ | ✅ qualquer | ✅ qualquer | ✅ qualquer | ✅ só os seus | ❌ | ❌ |
 | Confirmar leitura de comunicado | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
 | Ver quem leu (relatório) | ❌ | ✅ | ✅ | ✅ | ✅ só dos seus | ❌ | ❌ |
+| Conversar por mensagem privada | ❌ | ✅ funcionários e responsáveis | ✅ funcionários e responsáveis | ✅ funcionários e responsáveis | ✅ funcionários + responsáveis dos seus alunos | ✅ gestão + professores dos seus filhos | ❌ |
 
 ¹ Direção cria: secretaria, professor, coordenação, responsável e aluno — sempre na própria escola.
 ² Secretaria cria: professor, responsável e aluno — sempre na própria escola.
@@ -29,3 +30,4 @@ Papéis: `admin_tecnico`, `direcao`, `secretaria`, `coordenacao_pedagogica`, `pr
 - **Aluno** ainda não tem acesso a nenhum módulo (limitação conhecida, será tratada com um recurso próprio de "meus dados").
 - **Administrador técnico** cuida da infraestrutura e das escolas; não acessa o conteúdo pedagógico (alunos, turmas, comunicados).
 - Quando o usuário não pode ver um recurso por ser de outra escola ou de outra turma, a API responde **404** (e não 403), para não revelar que o recurso existe.
+- **Mensagens privadas** só são lidas pelos dois participantes (nem a direção lê conversa alheia). Responsável nunca conversa com outro responsável. A regra de contato é conferida a cada mensagem enviada.

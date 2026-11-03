@@ -4,12 +4,15 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routes_announcements import router as announcements_router
 from app.api.routes_auth import router as auth_router
 from app.api.routes_classrooms import router as classrooms_router
 from app.api.routes_health import router as health_router
+from app.api.routes_messages import router as messages_router
+from app.api.routes_messages import ws_router as messages_ws_router
 from app.api.routes_schools import router as schools_router
 from app.api.routes_students import router as students_router
 from app.api.routes_users import router as users_router
@@ -49,9 +52,17 @@ app.add_middleware(
 )
 
 app.include_router(health_router)
+
+
+@app.get("/", include_in_schema=False)
+def root() -> RedirectResponse:
+    """A API não tem páginas: a raiz leva à documentação interativa (Swagger)."""
+    return RedirectResponse(url="/docs")
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(users_router, prefix="/api/v1")
 app.include_router(schools_router, prefix="/api/v1")
 app.include_router(students_router, prefix="/api/v1")
 app.include_router(classrooms_router, prefix="/api/v1")
 app.include_router(announcements_router, prefix="/api/v1")
+app.include_router(messages_router, prefix="/api/v1")
+app.include_router(messages_ws_router)

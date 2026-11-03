@@ -12,12 +12,13 @@ Todas as consultas filtram explicitamente por `school_id`, e a visibilidade
 - Alunos e administrador técnico: sem acesso nesta fase.
 """
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import and_, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Query, Session
 
+from app.core.timeutils import as_utc, utc_now
 from app.models.announcement import (
     AUDIENCE_CLASSROOMS,
     AUDIENCE_SCHOOL,
@@ -48,19 +49,8 @@ class AnnouncementPermissionError(Exception):
     pass
 
 
-def _now() -> datetime:
-    return datetime.now(timezone.utc)
-
-
-def _as_utc(value: datetime) -> datetime:
-    """Normaliza para UTC. Valores sem fuso (ex.: lidos do SQLite) são tratados como UTC."""
-    if value.tzinfo is None:
-        return value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc)
-
-
 def announcement_status(announcement: Announcement) -> str:
-    return "published" if _as_utc(announcement.publish_at) <= _now() else "scheduled"
+    return "published" if as_utc(announcement.publish_at) <= utc_now() else "scheduled"
 
 
 def build_response(announcement: Announcement, my_read_at: datetime | None = None) -> AnnouncementResponse:
@@ -119,7 +109,7 @@ def create_announcement(db: Session, author: User, data: AnnouncementCreateReque
         body=data.body,
         audience=data.audience,
         requires_confirmation=data.requires_confirmation,
-        publish_at=_as_utc(data.publish_at) if data.publish_at else _now(),
+        publish_at=as_utc(data.publish_at) if data.publish_at else utc_now(),
     )
     announcement.targets = [AnnouncementClassroom(classroom_id=classroom_id) for classroom_id in classroom_ids]
     db.add(announcement)
@@ -147,7 +137,7 @@ def _visible_query(db: Session, user: User) -> Query:
     if role in MANAGEMENT_ROLES:
         return query
 
-    published = Announcement.publish_at <= _now()
+    published = Announcement.publish_at <= utc_now()
     if role is RoleName.PROFESSOR:
         teacher_classrooms = select(TeacherClassroomAssignment.classroom_id).where(
             TeacherClassroomAssignment.teacher_id == user.id
