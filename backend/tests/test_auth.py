@@ -1,42 +1,29 @@
-"""Testes das regras críticas de autenticação e permissões."""
+"""Testes de login, usuário autenticado e ausência de cadastro público."""
+from tests.conftest import create_user_directly
+
+PASSWORD = "SenhaForte123"
 
 
-def _register_payload(email: str = "professor@escola.com", role: str = "professor") -> dict:
-    return {
-        "full_name": "Maria Professora",
-        "email": email,
-        "password": "SenhaForte123",
-        "role": role,
-    }
+def _login(client, email: str, password: str = PASSWORD):
+    return client.post("/api/v1/auth/login", json={"email": email, "password": password})
 
 
-def test_register_creates_user(client):
-    response = client.post("/api/v1/auth/register", json=_register_payload())
-    assert response.status_code == 201
-    body = response.json()
-    assert body["email"] == "professor@escola.com"
-    assert body["role"] == "professor"
-    assert "password" not in body
-    assert "hashed_password" not in body
-
-
-def test_register_rejects_duplicate_email(client):
-    client.post("/api/v1/auth/register", json=_register_payload())
-    response = client.post("/api/v1/auth/register", json=_register_payload())
-    assert response.status_code == 409
-
-
-def test_register_rejects_invalid_role(client):
-    response = client.post("/api/v1/auth/register", json=_register_payload(role="super_admin_invalido"))
-    assert response.status_code == 422
+def test_public_registration_is_not_available(client):
+    response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "full_name": "Invasor",
+            "email": "invasor@escola.com",
+            "password": PASSWORD,
+            "role": "admin_tecnico",
+        },
+    )
+    assert response.status_code == 404
 
 
 def test_login_with_correct_credentials_returns_token(client):
-    client.post("/api/v1/auth/register", json=_register_payload())
-    response = client.post(
-        "/api/v1/auth/login",
-        json={"email": "professor@escola.com", "password": "SenhaForte123"},
-    )
+    create_user_directly(client, "professor@escola.com", "professor")
+    response = _login(client, "professor@escola.com")
     assert response.status_code == 200
     body = response.json()
     assert body["token_type"] == "bearer"
@@ -44,12 +31,16 @@ def test_login_with_correct_credentials_returns_token(client):
 
 
 def test_login_with_wrong_password_is_rejected(client):
-    client.post("/api/v1/auth/register", json=_register_payload())
-    response = client.post(
-        "/api/v1/auth/login",
-        json={"email": "professor@escola.com", "password": "senha-errada"},
-    )
+    create_user_directly(client, "professor@escola.com", "professor")
+    response = _login(client, "professor@escola.com", password="senha-errada")
     assert response.status_code == 401
+
+
+def test_login_rejects_inactive_user(client):
+    user = create_user_directly(client, "professor@escola.com", "professor")
+    user.is_active = False
+    client.db_session.commit()
+    assert _login(client, "professor@escola.com").status_code == 401
 
 
 def test_me_requires_authentication(client):
@@ -58,13 +49,20 @@ def test_me_requires_authentication(client):
 
 
 def test_me_returns_current_user_with_valid_token(client):
-    client.post("/api/v1/auth/register", json=_register_payload())
-    login_response = client.post(
-        "/api/v1/auth/login",
-        json={"email": "professor@escola.com", "password": "SenhaForte123"},
-    )
-    token = login_response.json()["access_token"]
+    create_user_directly(client, "professor@escola.com", "professor")
+    token = _login(client, "professor@escola.com").json()["access_token"]
 
-    response = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
+    response = client.get("/api/v1/auth/me", headers={"Authorization": "Bearer " + token})
     assert response.status_code == 200
     assert response.json()["email"] == "professor@escola.com"
+
+
+def test_token_of_deactivated_user_is_rejected(client):
+    user = create_user_directly(client, "professor@escola.com", "professor")
+    token = _login(client, "professor@escola.com").json()["access_token"]
+
+    user.is_active = False
+    client.db_session.commit()
+
+    response = client.get("/api/v1/auth/me", headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 401

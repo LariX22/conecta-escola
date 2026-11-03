@@ -6,7 +6,8 @@ Plataforma de comunicação escolar: comunicados, mensagens, agenda, autorizaç�
 
 ## Módulos implementados
 
-- **Autenticação** (`/api/v1/auth`): registro, login (JWT) e dados do usuário autenticado.
+- **Autenticação** (`/api/v1/auth`): login (JWT) e dados do usuário autenticado.
+- **Usuários** (`/api/v1/users`): **não existe cadastro público**. Contas são criadas por quem tem permissão — `admin_tecnico` cria qualquer papel; `direcao` cria secretaria, professor, coordenação, responsável e aluno da própria escola; `secretaria` cria professor, responsável e aluno da própria escola. O primeiro `admin_tecnico` nasce das variáveis `BOOTSTRAP_ADMIN_EMAIL`/`BOOTSTRAP_ADMIN_PASSWORD`.
 - **Cadastros** (`/api/v1/schools`, `/api/v1/students`, `/api/v1/classrooms`): cadastro de escolas (restrito a `admin_tecnico`), alunos, turmas, matrículas, atribuição de professores a turmas e vínculo de responsáveis a alunos — com isolamento multi-tenant por `school_id` e permissões por papel aplicadas no servidor.
 
 ## Estrutura do repositório
@@ -66,7 +67,9 @@ docker compose -f infra/docker/docker-compose.yml exec api alembic upgrade head
 
 Abra no navegador: `http://localhost:8000/docs`
 
-**Resultado esperado:** a documentação interativa da API (Swagger) é exibida, com os endpoints de autenticação disponíveis (`/api/v1/auth/...`).
+**Resultado esperado:** a documentação interativa da API (Swagger) é exibida, com os endpoints disponíveis (`/api/v1/auth/...`, `/api/v1/users`, etc.).
+
+**Primeiro acesso:** o administrador inicial é criado na inicialização com o e-mail e a senha definidos em `BOOTSTRAP_ADMIN_EMAIL` e `BOOTSTRAP_ADMIN_PASSWORD` (no `.env`). No Swagger: use `POST /api/v1/auth/login`, copie o `access_token`, clique em **Authorize** e cole o token. Depois crie uma escola (`POST /api/v1/schools`) e o usuário de direção dela (`POST /api/v1/users`).
 
 ### 6. Rodar os testes automatizados
 
@@ -102,7 +105,7 @@ uvicorn app.main:app --reload
 
 ## Publicar no Render (plano gratuito)
 
-O arquivo [`render.yaml`](render.yaml) descreve a API e o banco PostgreSQL. O Render cria os dois sozinho e já preenche `DATABASE_URL` e `SECRET_KEY` — não é preciso digitar variáveis de ambiente.
+O arquivo [`render.yaml`](render.yaml) descreve a API e o banco PostgreSQL. O Render cria os dois sozinho e já preenche `DATABASE_URL` e `SECRET_KEY`. Só pedirá o e-mail e a senha do primeiro administrador (`BOOTSTRAP_ADMIN_EMAIL` e `BOOTSTRAP_ADMIN_PASSWORD`).
 
 1. No [Render](https://dashboard.render.com), abra **Blueprints** → **New Blueprint Instance**.
 2. Escolha o repositório `conecta-escola` e clique em **Connect**.
@@ -113,6 +116,7 @@ O arquivo [`render.yaml`](render.yaml) descreve a API e o banco PostgreSQL. O Re
 - A API "dorme" após 15 minutos sem acessos; a primeira requisição depois disso leva cerca de 1 minuto.
 - O banco gratuito **expira 30 dias após a criação** (14 dias de carência; depois é apagado) e só é permitido 1 banco gratuito por conta.
 - Se já existir um serviço antigo configurado manualmente (ex.: o que falhou com erro de `package.json`), apague-o para não duplicar deploys.
+- Em um serviço criado manualmente, adicione `BOOTSTRAP_ADMIN_EMAIL` e `BOOTSTRAP_ADMIN_PASSWORD` em *Environment*. Depois do primeiro login, essas duas variáveis podem ser removidas.
 
 ## Enviando alterações para o GitHub
 

@@ -23,6 +23,12 @@ class InvalidRoleError(Exception):
 
 
 def register_user(db: Session, data: UserRegisterRequest) -> User:
+    """Cria o usuário sem checar permissões de quem está criando.
+
+    Uso interno (bootstrap do admin inicial, `user_service` e testes).
+    Nunca exponha esta função diretamente em uma rota: use
+    `user_service.create_user_as`, que aplica a matriz de permissões.
+    """
     if db.query(User).filter(User.email == data.email).first():
         raise EmailAlreadyRegisteredError(f"E-mail já cadastrado: {data.email}")
 

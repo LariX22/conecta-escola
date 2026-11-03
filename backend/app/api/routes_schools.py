@@ -3,6 +3,8 @@
 Apenas o administrador técnico cria escolas. Demais papéis podem
 consultar apenas a própria escola (reforço de isolamento multi-tenant).
 """
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -30,7 +32,7 @@ def create_school_route(
 
 @router.get("/{school_id}", response_model=SchoolResponse)
 def get_school_route(
-    school_id,
+    school_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> SchoolResponse:

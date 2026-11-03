@@ -2,6 +2,19 @@
 from tests.conftest import create_school, register_and_login
 
 
+def test_user_can_read_own_school_and_admin_can_read_any(client):
+    admin_token = register_and_login(client, "admin@conecta.com", "admin_tecnico")
+    school = create_school(client, admin_token, name="Escola A", slug="escola-a")
+    direcao_token = register_and_login(client, "direcao-a@escola.com", "direcao", school_id=school["id"])
+
+    own = client.get(f"/api/v1/schools/{school['id']}", headers={"Authorization": "Bearer " + direcao_token})
+    assert own.status_code == 200
+    assert own.json()["id"] == school["id"]
+
+    as_admin = client.get(f"/api/v1/schools/{school['id']}", headers={"Authorization": "Bearer " + admin_token})
+    assert as_admin.status_code == 200
+
+
 def test_only_admin_tecnico_can_create_school(client):
     register_and_login(client, "professor@escola.com", "professor")
     professor_login = client.post(
