@@ -100,6 +100,20 @@ alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
+## Publicar no Render (plano gratuito)
+
+O arquivo [`render.yaml`](render.yaml) descreve a API e o banco PostgreSQL. O Render cria os dois sozinho e já preenche `DATABASE_URL` e `SECRET_KEY` — não é preciso digitar variáveis de ambiente.
+
+1. No [Render](https://dashboard.render.com), abra **Blueprints** → **New Blueprint Instance**.
+2. Escolha o repositório `conecta-escola` e clique em **Connect**.
+3. Dê um nome ao projeto e clique em **Apply**. Aguarde o deploy terminar.
+4. Abra `https://conecta-escola-api.onrender.com/docs` (ou a URL exibida no painel) para ver a API no ar.
+
+**Limites do plano gratuito:**
+- A API "dorme" após 15 minutos sem acessos; a primeira requisição depois disso leva cerca de 1 minuto.
+- O banco gratuito **expira 30 dias após a criação** (14 dias de carência; depois é apagado) e só é permitido 1 banco gratuito por conta.
+- Se já existir um serviço antigo configurado manualmente (ex.: o que falhou com erro de `package.json`), apague-o para não duplicar deploys.
+
 ## Enviando alterações para o GitHub
 
 ```powershell

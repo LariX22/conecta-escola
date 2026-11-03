@@ -1,6 +1,7 @@
 """Configurações da aplicação, lidas de variáveis de ambiente (.env)."""
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -19,6 +20,16 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
 
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:19006"]
+
+    @field_validator("database_url")
+    @classmethod
+    def use_psycopg_driver(cls, value: str) -> str:
+        # Provedores como o Render entregam "postgres://" ou "postgresql://", que o
+        # SQLAlchemy abriria com psycopg2 (não instalado). Forçamos o driver psycopg 3.
+        for prefix in ("postgres://", "postgresql://"):
+            if value.startswith(prefix):
+                return "postgresql+psycopg://" + value[len(prefix):]
+        return value
 
 
 @lru_cache
