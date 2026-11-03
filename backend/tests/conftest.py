@@ -19,6 +19,17 @@ from app.schemas.auth import UserRegisterRequest
 from app.services.auth_service import register_user
 
 
+@pytest.fixture(autouse=True, scope="session")
+def fast_password_hashing():
+    """Reduz o custo do bcrypt nos testes (muitos usuários e logins por teste).
+
+    Em produção continua valendo o custo padrão do passlib.
+    """
+    from app.core import security
+
+    security._pwd_context.update(bcrypt__rounds=4)
+
+
 @pytest.fixture()
 def db_session():
     engine = create_engine(

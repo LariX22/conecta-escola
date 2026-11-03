@@ -2,13 +2,14 @@
 
 Plataforma de comunicação escolar: comunicados, mensagens, agenda, autorizações digitais, enquetes, documentos e relatórios — para escolas, com suporte a múltiplas instituições no futuro.
 
-> Este projeto está na **Fase 3 (implementação progressiva de módulos)**. A fundação técnica (Fase 2) está completa e o módulo de **cadastros** (escolas, alunos, turmas, matrículas, vínculo de responsáveis) já foi implementado. Veja o planejamento completo em [`docs/arquitetura/fase-1-planejamento.md`](docs/arquitetura/fase-1-planejamento.md).
+> Este projeto está na **Fase 3 (implementação progressiva de módulos)**. A fundação técnica (Fase 2) está completa e já foram implementados os módulos de **cadastros** (escolas, alunos, turmas, matrículas, vínculo de responsáveis) e de **comunicados com confirmação de leitura**. Veja o planejamento completo em [`docs/arquitetura/fase-1-planejamento.md`](docs/arquitetura/fase-1-planejamento.md).
 
 ## Módulos implementados
 
 - **Autenticação** (`/api/v1/auth`): login (JWT) e dados do usuário autenticado.
 - **Usuários** (`/api/v1/users`): **não existe cadastro público**. Contas são criadas por quem tem permissão — `admin_tecnico` cria qualquer papel; `direcao` cria secretaria, professor, coordenação, responsável e aluno da própria escola; `secretaria` cria professor, responsável e aluno da própria escola. O primeiro `admin_tecnico` nasce das variáveis `BOOTSTRAP_ADMIN_EMAIL`/`BOOTSTRAP_ADMIN_PASSWORD`.
 - **Cadastros** (`/api/v1/schools`, `/api/v1/students`, `/api/v1/classrooms`): cadastro de escolas (restrito a `admin_tecnico`), alunos, turmas, matrículas, atribuição de professores a turmas e vínculo de responsáveis a alunos — com isolamento multi-tenant por `school_id` e permissões por papel aplicadas no servidor.
+- **Comunicados** (`/api/v1/announcements`): avisos para a escola toda ou para turmas, com agendamento, edição/exclusão, **confirmação de leitura** pelos responsáveis e relatório de quem já leu. Veja [`docs/api/comunicados.md`](docs/api/comunicados.md).
 
 ## Estrutura do repositório
 
@@ -131,4 +132,6 @@ git push
 ## Documentação
 
 - [Planejamento e arquitetura (Fase 1)](docs/arquitetura/fase-1-planejamento.md)
+- [Matriz de permissões por papel](docs/api/permissoes.md)
+- [API de Comunicados](docs/api/comunicados.md)
 - Documentação de API: gerada automaticamente em `/docs` pela própria API (Swagger/OpenAPI).
