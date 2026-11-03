@@ -2,7 +2,12 @@
 
 Plataforma de comunicação escolar: comunicados, mensagens, agenda, autorizações digitais, enquetes, documentos e relatórios — para escolas, com suporte a múltiplas instituições no futuro.
 
-> Este projeto está na **Fase 2 (fundação técnica)**. Veja o planejamento completo em [`docs/arquitetura/fase-1-planejamento.md`](docs/arquitetura/fase-1-planejamento.md).
+> Este projeto está na **Fase 3 (implementação progressiva de módulos)**. A fundação técnica (Fase 2) está completa e o módulo de **cadastros** (escolas, alunos, turmas, matrículas, vínculo de responsáveis) já foi implementado. Veja o planejamento completo em [`docs/arquitetura/fase-1-planejamento.md`](docs/arquitetura/fase-1-planejamento.md).
+
+## Módulos implementados
+
+- **Autenticação** (`/api/v1/auth`): registro, login (JWT) e dados do usuário autenticado.
+- **Cadastros** (`/api/v1/schools`, `/api/v1/students`, `/api/v1/classrooms`): cadastro de escolas (restrito a `admin_tecnico`), alunos, turmas, matrículas, atribuição de professores a turmas e vínculo de responsáveis a alunos — com isolamento multi-tenant por `school_id` e permissões por papel aplicadas no servidor.
 
 ## Estrutura do repositório
 

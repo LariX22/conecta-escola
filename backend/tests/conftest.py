@@ -46,3 +46,37 @@ def client(db_session):
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
+
+
+def register_and_login(client, email: str, role: str, school_id: str | None = None, password: str = "SenhaForte123") -> str:
+    """Cria um usuário com o papel informado e retorna o token de acesso.
+
+    Função utilitária compartilhada pelos testes de cadastros, que
+    precisam de múltiplos usuários (direção, secretaria, professor,
+    responsável, etc.) vinculados a uma mesma escola.
+    """
+    payload = {
+        "full_name": f"Usuário {role}",
+        "email": email,
+        "password": password,
+        "role": role,
+    }
+    if school_id is not None:
+        payload["school_id"] = school_id
+
+    response = client.post("/api/v1/auth/register", json=payload)
+    assert response.status_code == 201, response.text
+
+    login_response = client.post("/api/v1/auth/login", json={"email": email, "password": password})
+    assert login_response.status_code == 200, login_response.text
+    return login_response.json()["access_token"]
+
+
+def create_school(client, admin_token: str, name: str = "Escola Teste", slug: str = "escola-teste") -> dict:
+    response = client.post(
+        "/api/v1/schools",
+        json={"name": name, "slug": slug},
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert response.status_code == 201, response.text
+    return response.json()

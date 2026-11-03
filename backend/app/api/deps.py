@@ -44,3 +44,18 @@ def require_roles(*allowed_roles: str):
         return current_user
 
     return dependency
+
+
+def require_school_id(current_user: User) -> uuid.UUID:
+    """Resolve o `school_id` do usuário autenticado, exigindo que exista.
+
+    Usado em rotas de cadastro (alunos, turmas, etc.) para todos os
+    papéis vinculados a uma escola. `admin_tecnico` não possui
+    `school_id` e não deve usar esta dependência.
+    """
+    if current_user.school_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Usuário não está vinculado a nenhuma escola.",
+        )
+    return current_user.school_id
